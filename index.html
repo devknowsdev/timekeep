@@ -505,22 +505,30 @@ function updateNowBar(){
   const label=document.getElementById('nowLabel');
   const elapsed=document.getElementById('nowElapsed');
   if(state.activeTimer){
+    // Running: show tracker name + today's cumulative total (logged + current session)
     bar.classList.add('active');
     const t=getTracker(state.activeTimer.trackerId);
-    const secs=Math.floor((Date.now()-state.activeTimer.startMs)/1000);
+    const todayTotal=getLiveTodayTotal(state.activeTimer.trackerId);
     label.innerHTML=`Tracking <span class="now-tracker-name">${t?t.name:'?'}</span>`;
     elapsed.style.display='block';
-    elapsed.textContent=formatDuration(secs);
+    elapsed.textContent=formatDuration(todayTotal);
+  }else if(state.lastTrackerId){
+    // Paused: stay visible, show today's logged total so far
+    bar.classList.remove('active');
+    const t=getTracker(state.lastTrackerId);
+    const todayLogged=trackerTotalSecs(state.lastTrackerId,logsForDay(todayStr()));
+    label.innerHTML=`Paused &mdash; <span style="color:var(--text-faint)">${t?t.name:''}</span><span style="color:var(--text-faint);font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:10px;margin-left:10px">§ to resume</span>`;
+    elapsed.style.display='block';
+    elapsed.textContent=formatDuration(todayLogged)||'0s';
+    elapsed.style.opacity='0.45';
   }else{
     bar.classList.remove('active');
-    if(state.lastTrackerId){
-      const t=getTracker(state.lastTrackerId);
-      label.innerHTML=`Paused &mdash; <span style="color:var(--text-faint)">${t?t.name:''}</span><span style="color:var(--text-faint);font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:10px;margin-left:10px">§ to resume</span>`;
-    }else{
-      label.textContent='No timer running — start one below';
-    }
+    label.textContent='No timer running — start one below';
     elapsed.style.display='none';
+    elapsed.style.opacity='1';
   }
+  // Always restore full opacity when running
+  if(state.activeTimer)elapsed.style.opacity='1';
 }
 
 // ── BREAK TOAST ──
