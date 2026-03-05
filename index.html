@@ -248,6 +248,45 @@ main{display:grid;grid-template-columns:320px 1fr;flex:1;overflow:hidden;}
 .month-heat-bar{height:2px;border-radius:1px;margin-top:2px;}
 .month-day-total{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:9px;color:var(--text-faint);position:absolute;bottom:4px;right:5px;}
 
+
+/* ── TRACKER MANAGEMENT ── */
+.btn-tracker-menu{
+  width:26px;height:26px;border-radius:4px;border:1px solid transparent;
+  background:none;color:var(--text-faint);cursor:pointer;font-size:14px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:all .15s;line-height:1;
+}
+.btn-tracker-menu:hover{border-color:var(--border-hi);color:var(--text-dim);background:var(--surface2);}
+.tracker-edit-panel{
+  border-top:1px solid var(--border);padding:10px 12px;
+  display:none;flex-direction:column;gap:8px;background:var(--surface2);
+}
+.tracker-edit-panel.open{display:flex;}
+.tracker-edit-row{display:flex;gap:6px;align-items:center;}
+.tracker-edit-row input,.tracker-edit-row select{
+  flex:1;background:var(--bg);border:1px solid var(--border-hi);
+  color:var(--text);padding:6px 8px;
+  font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  font-size:12px;border-radius:4px;outline:none;transition:border-color .15s;min-width:0;
+}
+.tracker-edit-row input:focus,.tracker-edit-row select:focus{border-color:var(--accent);}
+.tracker-edit-row select option{background:var(--surface2);}
+.btn-edit-save{
+  background:var(--accent);color:#000;border:none;padding:5px 10px;
+  font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:10px;
+  font-weight:500;cursor:pointer;border-radius:4px;white-space:nowrap;transition:opacity .15s;
+}
+.btn-edit-save:hover{opacity:.85;}
+.btn-edit-delete{
+  background:none;border:1px solid var(--border);color:var(--text-faint);
+  padding:5px 10px;font-family:'IBM Plex Mono','Courier New',Courier,monospace;
+  font-size:10px;cursor:pointer;border-radius:4px;white-space:nowrap;transition:all .15s;
+}
+.btn-edit-delete:hover{border-color:var(--red);color:var(--red);}
+.tracker-edit-label{
+  font-family:'IBM Plex Mono','Courier New',Courier,monospace;
+  font-size:9px;letter-spacing:1.5px;color:var(--text-faint);text-transform:uppercase;
+}
 ::-webkit-scrollbar{width:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
@@ -451,7 +490,7 @@ function stopTimer(doSave=true){
   if(doSave){
     const endMs=Date.now();
     const duration=Math.floor((endMs-startMs)/1000);
-    if(duration>=5){
+    if(duration>=3){
       logId='log_'+Date.now();
       state.logs.push({id:logId,trackerId,startMs,endMs,duration,note:'',breakReason:''});
     }
@@ -486,7 +525,8 @@ function _tickTodayEl(id){
   const el=document.getElementById('todayTotal_'+id);
   if(!el)return;
   el.textContent=formatDurationShort(getLiveTodayTotal(id))||'—';
-  el.style.color='var(--accent)';
+  const isActive=state.activeTimer&&allTrackerIds(id).includes(state.activeTimer.trackerId);
+  el.style.color=isActive?'var(--accent)':'var(--text-faint)';
 }
 
 function tickTimer(){
@@ -565,6 +605,7 @@ function formatDuration(secs){
 }
 function formatDurationShort(secs){
   if(!secs)return '—';
+  if(secs<60)return secs+'s';
   const h=Math.floor(secs/3600),m=Math.floor((secs%3600)/60);
   if(h>0)return h+'h '+String(m).padStart(2,'0')+'m';
   return m+'m';
@@ -658,6 +699,22 @@ function renderTrackerCard(t,pl){
       <div class="sub-item-time" id="todayTotal_${c.id}" style="color:${cr?'var(--accent)':'var(--text-faint)'}">${formatDurationShort(cToday)||'—'}</div>
       ${cr?`<button class="btn-play stop" onclick="event.stopPropagation();stopTimer(true)" aria-label="Stop ${c.name}">&#9632;</button>`
           :`<button class="btn-play" onclick="event.stopPropagation();startTimer('${c.id}')" aria-label="Start ${c.name}">&#9654;</button>`}
+      <button class="btn-tracker-menu" onclick="event.stopPropagation();toggleEditPanel('${c.id}')" aria-label="Edit ${c.name}">&#8943;</button>
+    </div>
+    <div class="tracker-edit-panel" id="edit_${c.id}">
+      <div class="tracker-edit-label">Rename</div>
+      <div class="tracker-edit-row">
+        <input type="text" id="rename_${c.id}" value="${c.name}" placeholder="Name…" onkeydown="if(event.key==='Enter')saveTrackerEdit('${c.id}')"/>
+        <button class="btn-edit-save" onclick="saveTrackerEdit('${c.id}')">Save</button>
+      </div>
+      <div class="tracker-edit-label">Move to</div>
+      <div class="tracker-edit-row">
+        <select id="reparent_${c.id}">${buildParentOptions(c.id)}</select>
+        <button class="btn-edit-save" onclick="reparentTracker('${c.id}')">Move</button>
+      </div>
+      <div class="tracker-edit-row" style="justify-content:flex-end">
+        <button class="btn-edit-delete" onclick="deleteTracker('${c.id}')">Delete tracker</button>
+      </div>
     </div>`;
   }).join('')}</div>`:'';
   const headerClick=hc?`toggleExpand('${t.id}')`:'' ;
@@ -670,10 +727,107 @@ function renderTrackerCard(t,pl){
         ${hc?`<span class="chevron ${expandedTrackers.has(t.id)?'open':''}" id="chev_${t.id}">&#9658;</span>`
            :(isRunning?`<button class="btn-play stop" onclick="event.stopPropagation();stopTimer(true)" aria-label="Stop ${t.name}">&#9632;</button>`
                       :`<button class="btn-play" onclick="event.stopPropagation();startTimer('${t.id}')" aria-label="Start ${t.name}">&#9654;</button>`)}
+        <button class="btn-tracker-menu" onclick="event.stopPropagation();toggleEditPanel('${t.id}')" aria-label="Edit ${t.name}">&#8943;</button>
       </div>
     </div>${subHTML}
+    <div class="tracker-edit-panel" id="edit_${t.id}">
+      <div class="tracker-edit-label">Rename</div>
+      <div class="tracker-edit-row">
+        <input type="text" id="rename_${t.id}" value="${t.name}" placeholder="Name…" onkeydown="if(event.key==='Enter')saveTrackerEdit('${t.id}')"/>
+        <button class="btn-edit-save" onclick="saveTrackerEdit('${t.id}')">Save</button>
+      </div>
+      <div class="tracker-edit-label">Move to</div>
+      <div class="tracker-edit-row">
+        <select id="reparent_${t.id}">${buildParentOptions(t.id)}</select>
+        <button class="btn-edit-save" onclick="reparentTracker('${t.id}')">Move</button>
+      </div>
+      <div class="tracker-edit-row" style="justify-content:flex-end">
+        <button class="btn-edit-delete" onclick="deleteTracker('${t.id}')">Delete tracker</button>
+      </div>
+    </div>
   </div>`;
 }
+
+// ── TRACKER MANAGEMENT ──
+const openEditPanels=new Set();
+
+function buildParentOptions(excludeId){
+  // Build options excluding self and own descendants
+  const excluded=new Set(allTrackerIds(excludeId));
+  const opts=[`<option value="">— Top Level —</option>`];
+  getTopLevel().forEach(t=>{
+    if(!excluded.has(t.id))opts.push(`<option value="${t.id}">${t.name}</option>`);
+    getChildren(t.id).forEach(c=>{
+      if(!excluded.has(c.id))opts.push(`<option value="${c.id}">&nbsp;&nbsp;${c.name}</option>`);
+    });
+  });
+  return opts.join('');
+}
+
+function toggleEditPanel(id){
+  const el=document.getElementById('edit_'+id);
+  if(!el)return;
+  const isOpen=el.classList.contains('open');
+  // Close all open panels first
+  document.querySelectorAll('.tracker-edit-panel.open').forEach(p=>p.classList.remove('open'));
+  openEditPanels.clear();
+  if(!isOpen){
+    el.classList.add('open');
+    openEditPanels.add(id);
+    // Set current parent in the reparent select
+    const sel=document.getElementById('reparent_'+id);
+    const t=getTracker(id);
+    if(sel&&t)sel.value=t.parentId||'';
+    // Focus rename input
+    const inp=document.getElementById('rename_'+id);
+    if(inp)setTimeout(()=>inp.select(),50);
+  }
+}
+
+function saveTrackerEdit(id){
+  const inp=document.getElementById('rename_'+id);
+  if(!inp)return;
+  const name=inp.value.trim();
+  if(!name)return;
+  const t=getTracker(id);
+  if(t){t.name=name;saveState();render();}
+}
+
+function reparentTracker(id){
+  const sel=document.getElementById('reparent_'+id);
+  if(!sel)return;
+  const t=getTracker(id);
+  if(!t)return;
+  const newParent=sel.value||null;
+  // Safety: don't allow parenting to own descendant
+  if(newParent&&allTrackerIds(id).includes(newParent)){
+    alert("Can't move a tracker inside itself.");return;
+  }
+  t.parentId=newParent;
+  saveState();render();
+}
+
+function deleteTracker(id){
+  const t=getTracker(id);
+  if(!t)return;
+  // Block if timer is running on this tracker or its children
+  if(state.activeTimer&&allTrackerIds(id).includes(state.activeTimer.trackerId)){
+    alert('Stop the timer before deleting this tracker.');return;
+  }
+  const children=getChildren(id);
+  const hasLogs=state.logs.some(l=>allTrackerIds(id).includes(l.trackerId));
+  let msg=`Delete "${t.name}"?`;
+  if(children.length)msg+=` This will also delete ${children.length} sub-tracker(s).`;
+  if(hasLogs)msg+=` Past log entries for this tracker will be removed.`;
+  if(!confirm(msg))return;
+  // Remove tracker and all descendants
+  const toDelete=new Set(allTrackerIds(id));
+  state.trackers=state.trackers.filter(tr=>!toDelete.has(tr.id));
+  state.logs=state.logs.filter(l=>!toDelete.has(l.trackerId));
+  if(state.lastTrackerId&&toDelete.has(state.lastTrackerId))state.lastTrackerId=null;
+  saveState();render();
+}
+
 function toggleExpand(id){
   if(expandedTrackers.has(id))expandedTrackers.delete(id);else expandedTrackers.add(id);
   renderSidebar();
@@ -687,11 +841,14 @@ function renderContent(){
 
 function renderDayView(){
   const c=getCursor(),logs=logsForDay(c),tops=getTopLevel();
+  const isToday=(c===todayStr());
   const cards=tops.map(t=>{
-    const s=trackerTotalSecs(t.id,logs);
+    // Use live total (logged + running) when viewing today, otherwise use saved logs only
+    const s=isToday?getLiveTodayTotal(t.id):trackerTotalSecs(t.id,logs);
+    const isLive=isToday&&state.activeTimer&&allTrackerIds(t.id).includes(state.activeTimer.trackerId);
     return `<div class="summary-card"><div class="summary-card-bar" style="background:${t.color}"></div>
       <div class="summary-card-name">${t.name}</div>
-      <div class="summary-card-time" style="color:${t.color}">${s?formatDurationShort(s):'—'}</div>
+      <div class="summary-card-time" style="color:${isLive?'var(--accent)':t.color}">${s?formatDurationShort(s):'—'}</div>
       <div class="summary-card-sub">${s?Math.round(s/60)+' min':'no data'}</div></div>`;
   }).join('');
 
