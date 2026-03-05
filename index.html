@@ -68,7 +68,7 @@ html.light ::-webkit-scrollbar-thumb { background: var(--border); }
 
 *{box-sizing:border-box;margin:0;padding:0;}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
-body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;min-height:100vh;display:flex;flex-direction:column;}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;min-height:100vh;display:flex;flex-direction:column;}
 
 /* ── NOW BAR ── */
 #nowBar{
@@ -82,10 +82,10 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',-apple-s
 .now-dot{width:12px;height:12px;border-radius:50%;background:var(--text-faint);flex-shrink:0;transition:background .3s;}
 #nowBar.active .now-dot{background:var(--accent);animation:pulseDot 1.4s infinite;}
 @keyframes pulseDot{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.5);opacity:.7;}}
-.now-label{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:13px;color:var(--text-dim);}
+.now-label{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:14px;color:var(--text-dim);}
 #nowBar.active .now-label{color:var(--text);}
 .now-tracker-name{color:var(--accent);font-weight:500;}
-.now-elapsed{font-family:'Bebas Neue',Impact,'Arial Narrow',sans-serif;font-size:24px;letter-spacing:2px;color:var(--accent);min-width:90px;}
+.now-elapsed{font-family:'Bebas Neue',Impact,'Arial Narrow',sans-serif;font-size:27px;letter-spacing:2px;color:var(--accent);min-width:100px;}
 .now-right{display:flex;align-items:center;gap:12px;}
 .key-hint{
   font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:10px;color:var(--text-faint);
@@ -109,21 +109,21 @@ header{display:flex;align-items:center;justify-content:space-between;padding:12p
 .logo sub{font-size:10px;font-family:'IBM Plex Mono','Courier New',Courier,monospace;letter-spacing:2px;color:var(--text-faint);font-style:normal;margin-left:6px;vertical-align:middle;}
 .header-right{display:flex;align-items:center;gap:10px;}
 .view-tabs{display:flex;gap:2px;background:var(--bg);border-radius:5px;padding:2px;border:1px solid var(--border);}
-.view-tab{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:10px;letter-spacing:1.5px;padding:7px 16px;border:1px solid transparent;background:none;color:var(--text-faint);cursor:pointer;border-radius:4px;transition:all .15s;text-transform:uppercase;min-width:60px;}
+.view-tab{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:11px;letter-spacing:1.5px;padding:8px 18px;border:1px solid transparent;background:none;color:var(--text-faint);cursor:pointer;border-radius:4px;transition:all .15s;text-transform:uppercase;min-width:60px;}
 .view-tab.active{background:var(--surface2);color:var(--accent);border-color:var(--border-hi);}
 .view-tab:hover:not(.active){color:var(--text-dim);}
 
 /* ── PERIOD NAV ── */
 .period-nav{display:flex;align-items:center;justify-content:space-between;padding:10px 24px;border-bottom:1px solid var(--border);background:var(--surface);gap:12px;}
 .nav-group{display:flex;gap:4px;align-items:center;}
-.nav-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);padding:7px 14px;cursor:pointer;font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:11px;border-radius:4px;transition:all .15s;white-space:nowrap;}
+.nav-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);padding:7px 14px;cursor:pointer;font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:12px;border-radius:4px;transition:all .15s;white-space:nowrap;}
 .nav-btn:hover{color:var(--text);border-color:var(--border-hi);}
 .nav-btn.today{color:var(--accent);border-color:#e8a03055;}
 .nav-btn.today:hover{background:var(--accent-dim);}
 .period-label{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:11px;color:var(--text-dim);letter-spacing:1px;text-align:center;flex:1;}
 
 /* ── LAYOUT ── */
-main{display:grid;grid-template-columns:320px 1fr;flex:1;overflow:hidden;}
+main{display:grid;grid-template-columns:340px 1fr;flex:1;overflow:hidden;}
 
 /* ── SIDEBAR ── */
 .sidebar{border-right:1px solid var(--border);overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:6px;background:var(--surface);}
@@ -132,13 +132,13 @@ main{display:grid;grid-template-columns:320px 1fr;flex:1;overflow:hidden;}
 /* tracker cards */
 .tracker-card{background:var(--bg);border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color .2s,box-shadow .2s;}
 .tracker-card.running{border-color:var(--accent);box-shadow:0 0 0 2px #e8a03015,0 2px 14px #e8a03018;}
-.tracker-header{display:flex;align-items:center;gap:10px;padding:13px 12px;cursor:pointer;user-select:none;min-height:52px;}
+.tracker-header{display:flex;align-items:center;gap:10px;padding:14px 12px;cursor:pointer;user-select:none;min-height:56px;}
 .tracker-header:hover{background:var(--surface2);}
 .tracker-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;transition:transform .2s;}
 .tracker-dot.pulse{animation:pulseDot 1.4s infinite;}
-.tracker-name{font-size:13px;font-weight:500;flex:1;letter-spacing:.3px;}
+.tracker-name{font-size:14px;font-weight:500;flex:1;letter-spacing:.3px;}
 .tracker-controls{display:flex;align-items:center;gap:6px;flex-shrink:0;}
-.tracker-period-time{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:12px;min-width:44px;text-align:right;transition:color .2s;}
+.tracker-period-time{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:13px;min-width:48px;text-align:right;transition:color .2s;}
 .tracker-live-time{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:11px;color:var(--accent);min-width:52px;}
 .btn-play{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--border-hi);background:var(--surface2);color:var(--text-dim);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:11px;flex-shrink:0;}
 .btn-play:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
@@ -148,14 +148,14 @@ main{display:grid;grid-template-columns:320px 1fr;flex:1;overflow:hidden;}
 .chevron.open{transform:rotate(90deg);}
 .sub-items{border-top:1px solid var(--border);display:none;}
 .sub-items.open{display:block;}
-.sub-item{display:flex;align-items:center;gap:8px;padding:10px 12px 10px 30px;border-bottom:1px solid #2a2a2a66;transition:background .1s;min-height:44px;}
+.sub-item{display:flex;align-items:center;gap:8px;padding:10px 12px 10px 30px;border-bottom:1px solid #2a2a2a66;transition:background .1s;min-height:48px;}
 .sub-item:last-child{border-bottom:none;}
 .sub-item:hover{background:var(--surface2);}
 .sub-item.running{background:#e8a03008;}
 .sub-item-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-.sub-item-name{font-size:12px;color:var(--text-dim);flex:1;}
+.sub-item-name{font-size:13px;color:var(--text-dim);flex:1;}
 .sub-item.running .sub-item-name{color:var(--text);}
-.sub-item-time{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:11px;color:var(--text-faint);min-width:36px;text-align:right;}
+.sub-item-time{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:12px;color:var(--text-faint);min-width:36px;text-align:right;}
 
 /* sidebar settings */
 .sidebar-settings{margin-top:auto;padding-top:12px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;}
@@ -192,21 +192,21 @@ main{display:grid;grid-template-columns:320px 1fr;flex:1;overflow:hidden;}
 .summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:10px;margin-bottom:22px;}
 .summary-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;}
 .summary-card-bar{position:absolute;top:0;left:0;right:0;height:3px;}
-.summary-card-name{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:9px;letter-spacing:2px;color:var(--text-faint);margin-bottom:8px;margin-top:2px;text-transform:uppercase;}
-.summary-card-time{font-family:'Bebas Neue',Impact,'Arial Narrow',sans-serif;font-size:30px;letter-spacing:2px;line-height:1;margin-bottom:4px;}
-.summary-card-sub{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:10px;color:var(--text-faint);}
+.summary-card-name{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:10px;letter-spacing:2px;color:var(--text-faint);margin-bottom:8px;margin-top:2px;text-transform:uppercase;}
+.summary-card-time{font-family:'Bebas Neue',Impact,'Arial Narrow',sans-serif;font-size:34px;letter-spacing:2px;line-height:1;margin-bottom:4px;}
+.summary-card-sub{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:11px;color:var(--text-faint);}
 .section-title{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:9px;letter-spacing:3px;color:var(--text-faint);text-transform:uppercase;margin-bottom:12px;}
 .chart-section{margin-bottom:24px;}
 .bar-chart{display:flex;flex-direction:column;gap:10px;}
 .bar-row{display:flex;align-items:center;gap:12px;}
-.bar-label{font-size:12px;color:var(--text-dim);width:130px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bar-label{font-size:13px;color:var(--text-dim);width:130px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .bar-track{flex:1;height:7px;background:var(--surface2);border-radius:4px;overflow:hidden;}
 .bar-fill{height:100%;border-radius:4px;transition:width .4s ease;}
 .bar-time{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:11px;color:var(--text-dim);width:56px;text-align:right;flex-shrink:0;}
 .log-section{margin-bottom:24px;}
-.log-table{width:100%;border-collapse:collapse;font-size:12px;}
+.log-table{width:100%;border-collapse:collapse;font-size:13px;}
 .log-table th{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:9px;letter-spacing:2px;color:var(--text-faint);text-transform:uppercase;text-align:left;padding:6px 10px;border-bottom:1px solid var(--border);}
-.log-table td{padding:9px 10px;border-bottom:1px solid #2a2a2a55;color:var(--text-dim);vertical-align:middle;}
+.log-table td{padding:10px 12px;border-bottom:1px solid #2a2a2a55;color:var(--text-dim);vertical-align:middle;}
 .log-table tr:hover td{background:var(--surface);}
 .log-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:7px;}
 .log-time-mono{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:11px;}
@@ -214,8 +214,14 @@ main{display:grid;grid-template-columns:320px 1fr;flex:1;overflow:hidden;}
 .btn-delete-log{background:none;border:none;color:var(--text-faint);cursor:pointer;padding:3px 7px;font-size:12px;border-radius:3px;transition:all .15s;opacity:0;}
 .log-table tr:hover .btn-delete-log{opacity:1;}
 .btn-delete-log:hover{color:var(--red);background:#e0525215;}
-.manual-entry{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:22px;}
-.manual-entry-title{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:9px;letter-spacing:2px;color:var(--text-faint);text-transform:uppercase;margin-bottom:10px;}
+.manual-entry{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:22px;overflow:hidden;}
+.manual-entry-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;transition:background .15s;}
+.manual-entry-header:hover{background:var(--surface2);}
+.manual-entry-body{padding:0 16px 14px;display:none;}
+.manual-entry-body.open{display:block;}
+.manual-entry-chevron{font-size:9px;color:var(--text-faint);transition:transform .2s;}
+.manual-entry-chevron.open{transform:rotate(90deg);}
+.manual-entry-title{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:10px;letter-spacing:2px;color:var(--text-faint);text-transform:uppercase;}
 .manual-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;}
 .manual-field{display:flex;flex-direction:column;gap:4px;}
 .manual-field label{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:9px;letter-spacing:1px;color:var(--text-faint);text-transform:uppercase;}
@@ -424,7 +430,23 @@ const COLORS=['#e8a030','#4a90c4','#4caf7d','#9b6fc4','#c4531a','#e05252','#4ac4
 let state={trackers:[],logs:[],activeTimer:null,lastTrackerId:null,view:'day',cursor:null};
 let prefs={askBreakReason:false,theme:'dark'};
 let pendingBreakLogId=null;
-let lastSavedLogId=null; // for undo
+// ── UNDO / REDO STACKS ──
+// Each entry: {log: <log object copy>}  (only 'add' ops for now)
+let undoStack=[];
+let redoStack=[];
+const UNDO_MAX=30;
+function loadUndoStack(){
+  try{const u=localStorage.getItem('timekeep_undo');if(u)undoStack=JSON.parse(u);}catch(e){}
+}
+function saveUndoStack(){
+  localStorage.setItem('timekeep_undo',JSON.stringify(undoStack.slice(-UNDO_MAX)));
+}
+function pushUndo(log){
+  undoStack.push({log:JSON.parse(JSON.stringify(log))});
+  if(undoStack.length>UNDO_MAX)undoStack.shift();
+  redoStack=[];
+  saveUndoStack();
+}
 
 // ── PERSIST ──
 function loadState(){
@@ -499,8 +521,9 @@ function stopTimer(doSave=true){
     const duration=Math.floor((endMs-startMs)/1000);
     if(duration>=1){
       logId='log_'+Date.now();
-      lastSavedLogId=logId;
-      state.logs.push({id:logId,trackerId,startMs,endMs,duration,note:'',breakReason:''});
+      const newLog={id:logId,trackerId,startMs,endMs,duration,note:'',breakReason:''};
+      state.logs.push(newLog);
+      pushUndo(newLog);
     }
   }
   // Clear activeTimer AFTER saving log so getLiveTodayTotal
@@ -844,18 +867,39 @@ function deleteTracker(id){
   saveState();render();
 }
 
-// ── UNDO / RESET ──
+// ── UNDO / REDO ──
 function undoLastSession(){
-  if(!lastSavedLogId){alert('Nothing to undo.');return;}
-  const log=state.logs.find(l=>l.id===lastSavedLogId);
-  if(!log){alert('Nothing to undo.');return;}
-  const t=getTracker(log.trackerId);
-  const dur=formatDurationShort(log.duration);
-  const name=t?t.name:'tracker';
-  if(!confirm(`Undo last session?\n${name} — ${dur}`))return;
-  state.logs=state.logs.filter(l=>l.id!==lastSavedLogId);
-  lastSavedLogId=null;
+  if(!undoStack.length){showUndoToast('Nothing to undo');return;}
+  const entry=undoStack.pop();
+  // Remove this log from state
+  const existed=state.logs.find(l=>l.id===entry.log.id);
+  if(!existed){saveUndoStack();showUndoToast('Nothing to undo');return;}
+  state.logs=state.logs.filter(l=>l.id!==entry.log.id);
+  redoStack.push(entry);
+  saveUndoStack();
   saveState();render();
+  const t=getTracker(entry.log.trackerId);
+  showUndoToast('↩ Undone: '+(t?t.name:'session')+' — '+formatDurationShort(entry.log.duration));
+}
+function redoLastSession(){
+  if(!redoStack.length){showUndoToast('Nothing to redo');return;}
+  const entry=redoStack.pop();
+  state.logs.push(entry.log);
+  undoStack.push(entry);
+  saveUndoStack();
+  saveState();render();
+  const t=getTracker(entry.log.trackerId);
+  showUndoToast('↪ Redone: '+(t?t.name:'session')+' — '+formatDurationShort(entry.log.duration));
+}
+function showUndoToast(msg){
+  let el=document.getElementById('undoToast');
+  if(!el){
+    el=document.createElement('div');el.id='undoToast';
+    el.style.cssText="position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border-hi);color:var(--text-dim);padding:8px 18px;border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.5px;z-index:2000;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;box-shadow:0 4px 20px #00000066";
+    document.body.appendChild(el);
+  }
+  el.textContent=msg;el.style.opacity='1';
+  clearTimeout(el._t);el._t=setTimeout(()=>el.style.opacity='0',1800);
 }
 
 function resetTrackerToday(id){
@@ -871,7 +915,9 @@ function resetTrackerToday(id){
   if(!confirm(`Reset all of today's tracked time for "${t.name}"?\nThis will remove ${formatDurationShort(totalSecs)} (${todayLogs.length} session${todayLogs.length!==1?'s':''}).`))return;
   const todayLogIds=new Set(todayLogs.map(l=>l.id));
   state.logs=state.logs.filter(l=>!todayLogIds.has(l.id));
-  if(lastSavedLogId&&todayLogIds.has(lastSavedLogId))lastSavedLogId=null;
+  undoStack=undoStack.filter(e=>!todayLogIds.has(e.log.id));
+  redoStack=redoStack.filter(e=>!todayLogIds.has(e.log.id));
+  saveUndoStack();
   saveState();render();
 }
 
@@ -884,6 +930,13 @@ function toggleExpand(id){
 function renderContent(){
   document.getElementById('content').innerHTML=
     state.view==='day'?renderDayView():state.view==='week'?renderWeekView():renderMonthView();
+  // Restore collapsible manual entry state after re-render
+  if(manualOpen){
+    const body=document.getElementById('manualBody');
+    const chev=document.getElementById('manualChevron');
+    if(body)body.classList.add('open');
+    if(chev)chev.classList.add('open');
+  }
 }
 
 function renderDayView(){
@@ -927,15 +980,20 @@ function renderDayView(){
     <div class="summary-grid">${cards}</div>
     ${flat.length?`<div class="chart-section"><div class="section-title">Breakdown</div><div class="bar-chart">${bars}</div></div>`:''}
     <div class="manual-entry">
-      <div class="manual-entry-title">+ Manual Log Entry</div>
-      <div class="manual-row">
-        <div class="manual-field"><label>Tracker</label>
-          <select id="qTracker">${state.trackers.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')}</select></div>
-        <div class="manual-field"><label>Date</label><input type="date" id="qDate" value="${c}" /></div>
-        <div class="manual-field"><label>Start</label><input type="time" id="qStart" /></div>
-        <div class="manual-field"><label>End</label><input type="time" id="qEnd" /></div>
-        <div class="manual-field"><label>Note</label><input type="text" id="qNote" placeholder="optional…" style="width:120px"/></div>
-        <div class="manual-field"><label>&nbsp;</label><button class="btn-confirm" onclick="saveQuickEntry()">Log</button></div>
+      <div class="manual-entry-header" onclick="toggleManualEntry()">
+        <div class="manual-entry-title">+ Manual Log Entry</div>
+        <span class="manual-entry-chevron" id="manualChevron">&#9658;</span>
+      </div>
+      <div class="manual-entry-body" id="manualBody">
+        <div class="manual-row">
+          <div class="manual-field"><label>Tracker</label>
+            <select id="qTracker">${state.trackers.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')}</select></div>
+          <div class="manual-field"><label>Date</label><input type="date" id="qDate" value="${c}" /></div>
+          <div class="manual-field"><label>Start</label><input type="time" id="qStart" /></div>
+          <div class="manual-field"><label>End</label><input type="time" id="qEnd" /></div>
+          <div class="manual-field"><label>Note</label><input type="text" id="qNote" placeholder="optional…" style="width:120px"/></div>
+          <div class="manual-field"><label>&nbsp;</label><button class="btn-confirm" onclick="saveQuickEntry()">Log</button></div>
+        </div>
       </div>
     </div>
     ${rows?`<div class="log-section"><div class="section-title">Session Log</div>
@@ -1007,10 +1065,22 @@ function saveQuickEntry(){
   if(!tid||!dv||!sv||!ev){alert('Please fill in tracker, date, start and end time.');return;}
   const sMs=new Date(dv+'T'+sv).getTime(),eMs=new Date(dv+'T'+ev).getTime();
   if(eMs<=sMs){alert('End time must be after start time.');return;}
-  state.logs.push({id:'log_'+Date.now(),trackerId:tid,startMs:sMs,endMs:eMs,duration:Math.floor((eMs-sMs)/1000),note,breakReason:''});
+  const qLog={id:'log_'+Date.now(),trackerId:tid,startMs:sMs,endMs:eMs,duration:Math.floor((eMs-sMs)/1000),note,breakReason:''};
+  state.logs.push(qLog);
+  pushUndo(qLog);
   saveState();render();
 }
 function deleteLog(id){state.logs=state.logs.filter(l=>l.id!==id);saveState();render();}
+
+// ── MANUAL ENTRY TOGGLE ──
+let manualOpen=false;
+function toggleManualEntry(){
+  manualOpen=!manualOpen;
+  const body=document.getElementById('manualBody');
+  const chev=document.getElementById('manualChevron');
+  if(body){body.classList.toggle('open',manualOpen);}
+  if(chev){chev.classList.toggle('open',manualOpen);}
+}
 
 // ── ADD TRACKER ──
 let selectedColor=COLORS[0];
@@ -1047,9 +1117,15 @@ function updateClock(){
 
 // ── KEYBOARD ──
 document.addEventListener('keydown',e=>{
+  const tag=document.activeElement?.tagName?.toLowerCase();
+  const typing=tag==='input'||tag==='textarea'||tag==='select';
+  // Cmd/Ctrl+Z = undo, Cmd/Ctrl+Shift+Z = redo (skip when typing)
+  if((e.metaKey||e.ctrlKey)&&!typing){
+    if(e.key==='z'&&!e.shiftKey){e.preventDefault();undoLastSession();return;}
+    if((e.key==='z'&&e.shiftKey)||(e.key==='y')){e.preventDefault();redoLastSession();return;}
+  }
   if(e.key==='§'){
-    const tag=document.activeElement?.tagName?.toLowerCase();
-    if(tag==='input'||tag==='textarea'||tag==='select')return;
+    if(typing)return;
     e.preventDefault();toggleTimer();return;
   }
   if(document.getElementById('breakToast').classList.contains('visible')){
@@ -1062,7 +1138,7 @@ document.addEventListener('keydown',e=>{
 function render(){renderSidebar();renderContent();renderPeriodLabel();updateNowBar();}
 
 function init(){
-  loadState();applyPrefs();initColorSwatches();render();updateClock();
+  loadState();loadUndoStack();applyPrefs();initColorSwatches();render();updateClock();
   setInterval(updateClock,1000);
   if(state.activeTimer){timerInterval=setInterval(tickTimer,500);}
   document.getElementById('newTrackerName').addEventListener('keydown',e=>{
