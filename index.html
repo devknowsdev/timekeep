@@ -28,6 +28,44 @@
   --blue: #4a90c4;
   --purple: #9b6fc4;
 }
+
+/* ── LIGHT THEME ── */
+html.light {
+  --bg: #eef4f1;
+  --surface: #e4ede8;
+  --surface2: #d8e6de;
+  --surface3: #ccddd5;
+  --border: #b8d0c4;
+  --border-hi: #9abfb0;
+  --accent: #3d7d5f;
+  --accent-dim: #3d7d5f1a;
+  --text: #1a2e24;
+  --text-dim: #3d5c4e;
+  --text-faint: #7a9e8e;
+  --green: #2e7d52;
+  --red: #b85450;
+  --blue: #3a6f9a;
+  --purple: #6b5fa0;
+}
+html.light #nowBar.active { background: #d8ede3; }
+html.light .tracker-card { background: var(--surface2); }
+html.light .tracker-card.running { box-shadow: 0 0 0 2px #3d7d5f18, 0 2px 14px #3d7d5f14; }
+html.light .tracker-header:hover { background: var(--surface3); }
+html.light .sub-item:hover { background: var(--surface3); }
+html.light .sub-item.running { background: #3d7d5f0a; }
+html.light .summary-card { background: var(--surface); }
+html.light .log-table tr:hover td { background: var(--surface2); }
+html.light .manual-entry { background: var(--surface); }
+html.light .week-day { background: var(--surface); }
+html.light .month-day { background: var(--surface); }
+html.light #breakToast { background: var(--surface); border-color: #3d7d5f55; }
+html.light .add-form { background: var(--surface2); }
+html.light .add-form input, html.light .add-form select { background: var(--bg); }
+html.light .manual-field input, html.light .manual-field select { background: var(--surface2); }
+html.light .now-stop-btn { border-color: var(--red); color: var(--red); }
+html.light .btn-cancel:hover { border-color: var(--red); color: var(--red); }
+html.light ::-webkit-scrollbar-thumb { background: var(--border); }
+
 *{box-sizing:border-box;margin:0;padding:0;}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;min-height:100vh;display:flex;flex-direction:column;}
@@ -100,7 +138,7 @@ main{display:grid;grid-template-columns:320px 1fr;flex:1;overflow:hidden;}
 .tracker-dot.pulse{animation:pulseDot 1.4s infinite;}
 .tracker-name{font-size:13px;font-weight:500;flex:1;letter-spacing:.3px;}
 .tracker-controls{display:flex;align-items:center;gap:6px;flex-shrink:0;}
-.tracker-period-time{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:11px;color:var(--text-faint);min-width:36px;text-align:right;}
+.tracker-period-time{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:12px;min-width:44px;text-align:right;transition:color .2s;}
 .tracker-live-time{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:11px;color:var(--accent);min-width:52px;}
 .btn-play{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--border-hi);background:var(--surface2);color:var(--text-dim);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:11px;flex-shrink:0;}
 .btn-play:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
@@ -128,6 +166,14 @@ main{display:grid;grid-template-columns:320px 1fr;flex:1;overflow:hidden;}
 .tk-checkbox:checked::after{content:'✓';position:absolute;top:-1px;left:2px;font-size:11px;color:#000;font-weight:bold;}
 
 /* add form */
+.theme-toggle{
+  display:flex;align-items:center;gap:6px;
+  background:none;border:1px solid var(--border-hi);color:var(--text-dim);
+  padding:6px 10px;border-radius:4px;cursor:pointer;
+  font-family:'IBM Plex Mono','Courier New',Courier,monospace;
+  font-size:10px;letter-spacing:.5px;width:100%;transition:all .15s;
+}
+.theme-toggle:hover{border-color:var(--accent);color:var(--accent);}
 .btn-add-tracker{width:100%;background:none;border:1px dashed var(--border-hi);color:var(--text-faint);padding:10px;cursor:pointer;font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:10px;letter-spacing:2px;border-radius:6px;transition:all .15s;text-transform:uppercase;margin-top:4px;}
 .btn-add-tracker:hover{border-color:var(--accent);color:var(--accent);}
 .add-form{background:var(--surface2);border:1px solid var(--border-hi);border-radius:6px;padding:12px;display:none;flex-direction:column;gap:8px;}
@@ -295,6 +341,11 @@ main{display:grid;grid-template-columns:320px 1fr;flex:1;overflow:hidden;}
         <input type="checkbox" class="tk-checkbox" id="chkBreakReason" onchange="savePrefs()">
         <label for="chkBreakReason">Ask for break reason when stopping</label>
       </div>
+      <div class="setting-row">
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Switch theme">
+          <span id="themeIcon">☀</span> <span id="themeLabel">Light mode</span>
+        </button>
+      </div>
       <button class="btn-add-tracker" onclick="toggleAddForm()">+ Add Tracker</button>
       <div class="add-form" id="addForm">
         <div style="font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:9px;letter-spacing:2px;color:var(--text-faint);text-transform:uppercase">New Tracker</div>
@@ -332,7 +383,7 @@ main{display:grid;grid-template-columns:320px 1fr;flex:1;overflow:hidden;}
 const COLORS=['#e8a030','#4a90c4','#4caf7d','#9b6fc4','#c4531a','#e05252','#4ac4b0','#c4b04a'];
 
 let state={trackers:[],logs:[],activeTimer:null,lastTrackerId:null,view:'day',cursor:null};
-let prefs={askBreakReason:false};
+let prefs={askBreakReason:false,theme:'dark'};
 let pendingBreakLogId=null;
 
 // ── PERSIST ──
@@ -346,7 +397,26 @@ function savePrefs(){
   prefs.askBreakReason=document.getElementById('chkBreakReason').checked;
   localStorage.setItem('timekeep_prefs',JSON.stringify(prefs));
 }
-function applyPrefs(){document.getElementById('chkBreakReason').checked=prefs.askBreakReason;}
+function applyPrefs(){
+  document.getElementById('chkBreakReason').checked=prefs.askBreakReason;
+  applyTheme();
+}
+function applyTheme(){
+  const isLight=prefs.theme==='light';
+  document.documentElement.classList.toggle('light',isLight);
+  const icon=document.getElementById('themeIcon');
+  const label=document.getElementById('themeLabel');
+  if(icon)icon.textContent=isLight?'◑':'☀';
+  if(label)label.textContent=isLight?'Dark mode':'Light mode';
+  // Update PWA theme-color meta tag
+  const meta=document.querySelector('meta[name="theme-color"]');
+  if(meta)meta.content=isLight?'#3d7d5f':'#e8a030';
+}
+function toggleTheme(){
+  prefs.theme=prefs.theme==='light'?'dark':'light';
+  savePrefs();
+  applyTheme();
+}
 
 function seedData(){
   const bp=addTrackerData('BeatPulse',null,'#4a90c4');
@@ -404,12 +474,29 @@ function toggleTimer(){
   if(state.activeTimer)stopTimer(true);
   else if(state.lastTrackerId)startTimer(state.lastTrackerId);
 }
+// ── LIVE TODAY TOTAL (logged + running elapsed for a tracker tree) ──
+function getLiveTodayTotal(id){
+  const logged=trackerTotalSecs(id,logsForDay(todayStr()));
+  if(state.activeTimer&&allTrackerIds(id).includes(state.activeTimer.trackerId))
+    return logged+Math.floor((Date.now()-state.activeTimer.startMs)/1000);
+  return logged;
+}
+
+function _tickTodayEl(id){
+  const el=document.getElementById('todayTotal_'+id);
+  if(!el)return;
+  el.textContent=formatDurationShort(getLiveTodayTotal(id))||'—';
+  el.style.color='var(--accent)';
+}
+
 function tickTimer(){
   updateNowBar();
   if(!state.activeTimer)return;
-  const elapsed=Math.floor((Date.now()-state.activeTimer.startMs)/1000);
-  const el=document.getElementById('live_'+state.activeTimer.trackerId);
-  if(el)el.textContent=formatDuration(elapsed);
+  const{trackerId}=state.activeTimer;
+  _tickTodayEl(trackerId);
+  // Also update parent if this is a sub-tracker
+  const t=getTracker(trackerId);
+  if(t&&t.parentId)_tickTodayEl(t.parentId);
 }
 
 // ── NOW BAR ──
@@ -552,27 +639,26 @@ function renderSidebar(){
 function renderTrackerCard(t,pl){
   const children=getChildren(t.id),hc=children.length>0;
   const isRunning=state.activeTimer&&allTrackerIds(t.id).includes(state.activeTimer.trackerId);
-  const ps=trackerTotalSecs(t.id,pl);
-  const liveEl=isRunning&&!hc?`<span id="live_${t.id}" class="tracker-live-time">${formatDuration(Math.floor((Date.now()-state.activeTimer.startMs)/1000))}</span>`:'';
+  const todayTotal=getLiveTodayTotal(t.id);
+  const timeColor=isRunning?'var(--accent)':'var(--text-faint)';
   const subHTML=hc?`<div class="sub-items" id="sub_${t.id}">${children.map(c=>{
     const cr=state.activeTimer?.trackerId===c.id;
-    const cs=trackerTotalSecs(c.id,pl);
-    const cl=cr?`<span id="live_${c.id}" class="tracker-live-time" style="font-size:10px">${formatDuration(Math.floor((Date.now()-state.activeTimer.startMs)/1000))}</span>`:'';
+    const cToday=getLiveTodayTotal(c.id);
     return `<div class="sub-item ${cr?'running':''}">
       <div class="sub-item-dot" style="background:${c.color}"></div>
-      <div class="sub-item-name">${c.name}</div>${cl}
-      <div class="sub-item-time">${formatDurationShort(cs)}</div>
+      <div class="sub-item-name">${c.name}</div>
+      <div class="sub-item-time" id="todayTotal_${c.id}" style="color:${cr?'var(--accent)':'var(--text-faint)'}">${formatDurationShort(cToday)||'—'}</div>
       ${cr?`<button class="btn-play stop" onclick="event.stopPropagation();stopTimer(true)" aria-label="Stop ${c.name}">&#9632;</button>`
           :`<button class="btn-play" onclick="event.stopPropagation();startTimer('${c.id}')" aria-label="Start ${c.name}">&#9654;</button>`}
     </div>`;
   }).join('')}</div>`:'';
-  const headerClick = hc ? `toggleExpand('${t.id}')` : '';
+  const headerClick=hc?`toggleExpand('${t.id}')`:'' ;
   return `<div class="tracker-card ${isRunning?'running':''}">
     <div class="tracker-header" onclick="${headerClick}" ${hc?'role="button"':''}>
       <div class="tracker-dot ${isRunning?'pulse':''}" style="background:${t.color}"></div>
       <div class="tracker-name">${t.name}</div>
       <div class="tracker-controls">
-        <div class="tracker-period-time">${formatDurationShort(ps)}</div>${liveEl}
+        <div class="tracker-period-time" id="todayTotal_${t.id}" style="color:${timeColor}">${formatDurationShort(todayTotal)||'—'}</div>
         ${hc?`<span class="chevron ${expandedTrackers.has(t.id)?'open':''}" id="chev_${t.id}">&#9658;</span>`
            :(isRunning?`<button class="btn-play stop" onclick="event.stopPropagation();stopTimer(true)" aria-label="Stop ${t.name}">&#9632;</button>`
                       :`<button class="btn-play" onclick="event.stopPropagation();startTimer('${t.id}')" aria-label="Start ${t.name}">&#9654;</button>`)}
@@ -589,7 +675,6 @@ function toggleExpand(id){
 function renderContent(){
   document.getElementById('content').innerHTML=
     state.view==='day'?renderDayView():state.view==='week'?renderWeekView():renderMonthView();
-  renderSidebar();
 }
 
 function renderDayView(){
@@ -778,11 +863,16 @@ init();
 
 <script>
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').then(reg => {
-      console.log('TimeKeep: offline ready', reg.scope);
-    }).catch(err => console.warn('SW registration failed:', err));
-  });
+  // Only register SW on real deployments, not preview/iframe environments
+  const isPreview = window.location.hostname.includes('claudeusercontent.com')
+    || window.location.protocol === 'blob:';
+  if (!isPreview) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('TimeKeep: offline ready ✓'))
+        .catch(() => {}); // silently skip if unavailable
+    });
+  }
 }
 </script>
 </body>
