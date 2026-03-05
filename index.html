@@ -424,6 +424,7 @@ const COLORS=['#e8a030','#4a90c4','#4caf7d','#9b6fc4','#c4531a','#e05252','#4ac4
 let state={trackers:[],logs:[],activeTimer:null,lastTrackerId:null,view:'day',cursor:null};
 let prefs={askBreakReason:false,theme:'dark'};
 let pendingBreakLogId=null;
+let lastSavedLogId=null; // for undo
 
 // ── PERSIST ──
 function loadState(){
@@ -481,24 +482,33 @@ function _doStart(trackerId){
   saveState();
   clearInterval(timerInterval);
   timerInterval=setInterval(tickTimer,500);
-  updateNowBar();render();
+  // Rebuild sidebar (updates play/stop buttons + running state)
+  // but do NOT call full render() at T=0 which would flash prior total
+  renderSidebar();
+  renderContent(); // update summary cards + log table
+  renderPeriodLabel();
+  updateNowBar();
+  // Let tickTimer handle live updates from here
 }
 function stopTimer(doSave=true){
   if(!state.activeTimer)return;
   const{trackerId,startMs}=state.activeTimer;
+  const endMs=Date.now();
   let logId=null;
   if(doSave){
-    const endMs=Date.now();
     const duration=Math.floor((endMs-startMs)/1000);
-    if(duration>=3){
+    if(duration>=1){
       logId='log_'+Date.now();
+      lastSavedLogId=logId;
       state.logs.push({id:logId,trackerId,startMs,endMs,duration,note:'',breakReason:''});
     }
   }
+  // Clear activeTimer AFTER saving log so getLiveTodayTotal
+  // can compute correct final value during the next render
   state.activeTimer=null;
-  saveState();
   clearInterval(timerInterval);timerInterval=null;
-  updateNowBar();render();
+  saveState();
+  render();
   if(doSave&&logId&&prefs.askBreakReason){
     pendingBreakLogId=logId;
     const t=getTracker(trackerId);
@@ -604,10 +614,12 @@ function formatDuration(secs){
   return m+'m '+s+'s';
 }
 function formatDurationShort(secs){
-  if(!secs)return '—';
+  if(!secs||secs<0)return '—';
   if(secs<60)return secs+'s';
-  const h=Math.floor(secs/3600),m=Math.floor((secs%3600)/60);
+  const h=Math.floor(secs/3600),m=Math.floor((secs%3600)/60),s=secs%60;
   if(h>0)return h+'h '+String(m).padStart(2,'0')+'m';
+  // Show seconds under 10 minutes so display matches the Now Bar
+  if(m<10)return m+'m '+String(s).padStart(2,'0')+'s';
   return m+'m';
 }
 function dateStr(ms){const d=new Date(ms);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
@@ -712,8 +724,10 @@ function renderTrackerCard(t,pl){
         <select id="reparent_${c.id}">${buildParentOptions(c.id)}</select>
         <button class="btn-edit-save" onclick="reparentTracker('${c.id}')">Move</button>
       </div>
-      <div class="tracker-edit-row" style="justify-content:flex-end">
-        <button class="btn-edit-delete" onclick="deleteTracker('${c.id}')">Delete tracker</button>
+      <div class="tracker-edit-row" style="justify-content:space-between">
+        <button class="btn-edit-delete" style="color:var(--text-faint);border-color:var(--border)" onclick="undoLastSession()">↩ Undo last</button>
+        <button class="btn-edit-delete" onclick="resetTrackerToday('${c.id}')">Reset today</button>
+        <button class="btn-edit-delete" onclick="deleteTracker('${c.id}')">Delete</button>
       </div>
     </div>`;
   }).join('')}</div>`:'';
@@ -741,8 +755,10 @@ function renderTrackerCard(t,pl){
         <select id="reparent_${t.id}">${buildParentOptions(t.id)}</select>
         <button class="btn-edit-save" onclick="reparentTracker('${t.id}')">Move</button>
       </div>
-      <div class="tracker-edit-row" style="justify-content:flex-end">
-        <button class="btn-edit-delete" onclick="deleteTracker('${t.id}')">Delete tracker</button>
+      <div class="tracker-edit-row" style="justify-content:space-between">
+        <button class="btn-edit-delete" style="color:var(--text-faint);border-color:var(--border)" onclick="undoLastSession()">↩ Undo last</button>
+        <button class="btn-edit-delete" onclick="resetTrackerToday('${t.id}')">Reset today</button>
+        <button class="btn-edit-delete" onclick="deleteTracker('${t.id}')">Delete</button>
       </div>
     </div>
   </div>`;
@@ -825,6 +841,37 @@ function deleteTracker(id){
   state.trackers=state.trackers.filter(tr=>!toDelete.has(tr.id));
   state.logs=state.logs.filter(l=>!toDelete.has(l.trackerId));
   if(state.lastTrackerId&&toDelete.has(state.lastTrackerId))state.lastTrackerId=null;
+  saveState();render();
+}
+
+// ── UNDO / RESET ──
+function undoLastSession(){
+  if(!lastSavedLogId){alert('Nothing to undo.');return;}
+  const log=state.logs.find(l=>l.id===lastSavedLogId);
+  if(!log){alert('Nothing to undo.');return;}
+  const t=getTracker(log.trackerId);
+  const dur=formatDurationShort(log.duration);
+  const name=t?t.name:'tracker';
+  if(!confirm(`Undo last session?\n${name} — ${dur}`))return;
+  state.logs=state.logs.filter(l=>l.id!==lastSavedLogId);
+  lastSavedLogId=null;
+  saveState();render();
+}
+
+function resetTrackerToday(id){
+  const t=getTracker(id);
+  if(!t)return;
+  if(state.activeTimer&&allTrackerIds(id).includes(state.activeTimer.trackerId)){
+    alert('Stop the timer before resetting.');return;
+  }
+  const ids=new Set(allTrackerIds(id));
+  const todayLogs=state.logs.filter(l=>ids.has(l.trackerId)&&dateStr(l.startMs)===todayStr());
+  if(!todayLogs.length){alert('No sessions logged today for this tracker.');return;}
+  const totalSecs=todayLogs.reduce((a,l)=>a+l.duration,0);
+  if(!confirm(`Reset all of today's tracked time for "${t.name}"?\nThis will remove ${formatDurationShort(totalSecs)} (${todayLogs.length} session${todayLogs.length!==1?'s':''}).`))return;
+  const todayLogIds=new Set(todayLogs.map(l=>l.id));
+  state.logs=state.logs.filter(l=>!todayLogIds.has(l.id));
+  if(lastSavedLogId&&todayLogIds.has(lastSavedLogId))lastSavedLogId=null;
   saveState();render();
 }
 
