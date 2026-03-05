@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TimeKeep</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#e8a030">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="TimeKeep">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root {
+  --bg: #0e0e0e;
+  --surface: #161616;
+  --surface2: #1f1f1f;
+  --surface3: #252525;
+  --border: #2a2a2a;
+  --border-hi: #3a3a3a;
+  --accent: #e8a030;
+  --accent-dim: #e8a03022;
+  --text: #e8e4dc;
+  --text-dim: #888;
+  --text-faint: #444;
+  --green: #4caf7d;
+  --red: #e05252;
+  --blue: #4a90c4;
+  --purple: #9b6fc4;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;min-height:100vh;display:flex;flex-direction:column;}
+
+/* ── NOW BAR ── */
+#nowBar{
+  background:var(--surface);border-bottom:2px solid var(--border);
+  padding:0 24px;height:58px;display:flex;align-items:center;
+  justify-content:space-between;position:sticky;top:0;z-index:200;
+  transition:border-color .3s,background .3s;
+}
+#nowBar.active{border-bottom-color:var(--accent);background:#161410;}
+.now-left{display:flex;align-items:center;gap:14px;}
+.now-dot{width:12px;height:12px;border-radius:50%;background:var(--text-faint);flex-shrink:0;transition:background .3s;}
+#nowBar.active .now-dot{background:var(--accent);animation:pulseDot 1.4s infinite;}
+@keyframes pulseDot{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.5);opacity:.7;}}
+.now-label{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:13px;color:var(--text-dim);}
+#nowBar.active .now-label{color:var(--text);}
+.now-tracker-name{color:var(--accent);font-weight:500;}
+.now-elapsed{font-family:'Bebas Neue',Impact,'Arial Narrow',sans-serif;font-size:24px;letter-spacing:2px;color:var(--accent);min-width:90px;}
+.now-right{display:flex;align-items:center;gap:12px;}
+.key-hint{
+  font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:10px;color:var(--text-faint);
+  background:var(--surface2);border:1px solid var(--border);padding:3px 9px;
+  border-radius:4px;letter-spacing:1px;user-select:none;white-space:nowrap;
+}
+.key-hint kbd{font-family:inherit;font-size:13px;color:var(--text-dim);}
+.now-stop-btn{
+  height:36px;padding:0 18px;background:transparent;border:1px solid var(--red);
+  color:var(--red);font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:11px;
+  letter-spacing:1.5px;cursor:pointer;border-radius:4px;transition:all .15s;
+  display:none;align-items:center;gap:6px;
+}
+#nowBar.active .now-stop-btn{display:flex;}
+.now-stop-btn:hover{background:#e0525220;}
+.date-display{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:10px;color:var(--text-faint);text-align:right;line-height:1.7;}
+
+/* ── HEADER ── */
+header{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid var(--border);background:var(--surface);}
+.logo{font-family:'Bebas Neue',Impact,'Arial Narrow',sans-serif;font-size:26px;letter-spacing:3px;color:var(--accent);line-height:1;}
+.logo sub{font-size:10px;font-family:'IBM Plex Mono','Courier New',Courier,monospace;letter-spacing:2px;color:var(--text-faint);font-style:normal;margin-left:6px;vertical-align:middle;}
+.header-right{display:flex;align-items:center;gap:10px;}
+.view-tabs{display:flex;gap:2px;background:var(--bg);border-radius:5px;padding:2px;border:1px solid var(--border);}
+.view-tab{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:10px;letter-spacing:1.5px;padding:7px 16px;border:1px solid transparent;background:none;color:var(--text-faint);cursor:pointer;border-radius:4px;transition:all .15s;text-transform:uppercase;min-width:60px;}
+.view-tab.active{background:var(--surface2);color:var(--accent);border-color:var(--border-hi);}
+.view-tab:hover:not(.active){color:var(--text-dim);}
+
+/* ── PERIOD NAV ── */
+.period-nav{display:flex;align-items:center;justify-content:space-between;padding:10px 24px;border-bottom:1px solid var(--border);background:var(--surface);gap:12px;}
+.nav-group{display:flex;gap:4px;align-items:center;}
+.nav-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);padding:7px 14px;cursor:pointer;font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:11px;border-radius:4px;transition:all .15s;white-space:nowrap;}
+.nav-btn:hover{color:var(--text);border-color:var(--border-hi);}
+.nav-btn.today{color:var(--accent);border-color:#e8a03055;}
+.nav-btn.today:hover{background:var(--accent-dim);}
+.period-label{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:11px;color:var(--text-dim);letter-spacing:1px;text-align:center;flex:1;}
+
+/* ── LAYOUT ── */
+main{display:grid;grid-template-columns:320px 1fr;flex:1;overflow:hidden;}
+
+/* ── SIDEBAR ── */
+.sidebar{border-right:1px solid var(--border);overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:6px;background:var(--surface);}
+.sidebar-section-label{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:9px;letter-spacing:3px;color:var(--text-faint);text-transform:uppercase;padding:4px 0 8px;border-bottom:1px solid var(--border);margin-bottom:2px;}
+
+/* tracker cards */
+.tracker-card{background:var(--bg);border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color .2s,box-shadow .2s;}
+.tracker-card.running{border-color:var(--accent);box-shadow:0 0 0 2px #e8a03015,0 2px 14px #e8a03018;}
+.tracker-header{display:flex;align-items:center;gap:10px;padding:13px 12px;cursor:pointer;user-select:none;min-height:52px;}
+.tracker-header:hover{background:var(--surface2);}
+.tracker-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;transition:transform .2s;}
+.tracker-dot.pulse{animation:pulseDot 1.4s infinite;}
+.tracker-name{font-size:13px;font-weight:500;flex:1;letter-spacing:.3px;}
+.tracker-controls{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.tracker-period-time{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:11px;color:var(--text-faint);min-width:36px;text-align:right;}
+.tracker-live-time{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:11px;color:var(--accent);min-width:52px;}
+.btn-play{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--border-hi);background:var(--surface2);color:var(--text-dim);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:11px;flex-shrink:0;}
+.btn-play:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
+.btn-play.stop{border-color:var(--red);color:var(--red);}
+.btn-play.stop:hover{background:#e0525222;}
+.chevron{color:var(--text-faint);font-size:9px;transition:transform .2s;flex-shrink:0;width:16px;text-align:center;}
+.chevron.open{transform:rotate(90deg);}
+.sub-items{border-top:1px solid var(--border);display:none;}
+.sub-items.open{display:block;}
+.sub-item{display:flex;align-items:center;gap:8px;padding:10px 12px 10px 30px;border-bottom:1px solid #2a2a2a66;transition:background .1s;min-height:44px;}
+.sub-item:last-child{border-bottom:none;}
+.sub-item:hover{background:var(--surface2);}
+.sub-item.running{background:#e8a03008;}
+.sub-item-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.sub-item-name{font-size:12px;color:var(--text-dim);flex:1;}
+.sub-item.running .sub-item-name{color:var(--text);}
+.sub-item-time{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:11px;color:var(--text-faint);min-width:36px;text-align:right;}
+
+/* sidebar settings */
+.sidebar-settings{margin-top:auto;padding-top:12px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;}
+.setting-row{display:flex;align-items:center;gap:8px;padding:2px;}
+.setting-row label{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:10px;letter-spacing:.5px;color:var(--text-dim);cursor:pointer;user-select:none;flex:1;line-height:1.4;}
+.tk-checkbox{appearance:none;-webkit-appearance:none;width:16px;height:16px;border:1.5px solid var(--border-hi);border-radius:3px;background:var(--bg);cursor:pointer;flex-shrink:0;position:relative;transition:all .15s;}
+.tk-checkbox:checked{background:var(--accent);border-color:var(--accent);}
+.tk-checkbox:checked::after{content:'✓';position:absolute;top:-1px;left:2px;font-size:11px;color:#000;font-weight:bold;}
+
+/* add form */
+.btn-add-tracker{width:100%;background:none;border:1px dashed var(--border-hi);color:var(--text-faint);padding:10px;cursor:pointer;font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:10px;letter-spacing:2px;border-radius:6px;transition:all .15s;text-transform:uppercase;margin-top:4px;}
+.btn-add-tracker:hover{border-color:var(--accent);color:var(--accent);}
+.add-form{background:var(--surface2);border:1px solid var(--border-hi);border-radius:6px;padding:12px;display:none;flex-direction:column;gap:8px;}
+.add-form.open{display:flex;}
+.add-form input,.add-form select{background:var(--bg);border:1px solid var(--border-hi);color:var(--text);padding:8px 10px;font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;border-radius:4px;outline:none;transition:border-color .15s;}
+.add-form input:focus,.add-form select:focus{border-color:var(--accent);}
+.add-form select option{background:var(--surface2);}
+.add-form-row{display:flex;gap:6px;}
+.color-swatches{display:flex;gap:6px;flex-wrap:wrap;}
+.swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color .15s,transform .1s;}
+.swatch:hover{transform:scale(1.15);}
+.swatch.selected{border-color:var(--text);transform:scale(1.1);}
+
+/* ── CONTENT ── */
+.content{overflow-y:auto;padding:22px 26px;}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:10px;margin-bottom:22px;}
+.summary-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;}
+.summary-card-bar{position:absolute;top:0;left:0;right:0;height:3px;}
+.summary-card-name{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:9px;letter-spacing:2px;color:var(--text-faint);margin-bottom:8px;margin-top:2px;text-transform:uppercase;}
+.summary-card-time{font-family:'Bebas Neue',Impact,'Arial Narrow',sans-serif;font-size:30px;letter-spacing:2px;line-height:1;margin-bottom:4px;}
+.summary-card-sub{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:10px;color:var(--text-faint);}
+.section-title{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:9px;letter-spacing:3px;color:var(--text-faint);text-transform:uppercase;margin-bottom:12px;}
+.chart-section{margin-bottom:24px;}
+.bar-chart{display:flex;flex-direction:column;gap:10px;}
+.bar-row{display:flex;align-items:center;gap:12px;}
+.bar-label{font-size:12px;color:var(--text-dim);width:130px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bar-track{flex:1;height:7px;background:var(--surface2);border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;transition:width .4s ease;}
+.bar-time{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:11px;color:var(--text-dim);width:56px;text-align:right;flex-shrink:0;}
+.log-section{margin-bottom:24px;}
+.log-table{width:100%;border-collapse:collapse;font-size:12px;}
+.log-table th{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:9px;letter-spacing:2px;color:var(--text-faint);text-transform:uppercase;text-align:left;padding:6px 10px;border-bottom:1px solid var(--border);}
+.log-table td{padding:9px 10px;border-bottom:1px solid #2a2a2a55;color:var(--text-dim);vertical-align:middle;}
+.log-table tr:hover td{background:var(--surface);}
+.log-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:7px;}
+.log-time-mono{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:11px;}
+.log-break-reason{font-size:11px;color:var(--text-faint);font-style:italic;}
+.btn-delete-log{background:none;border:none;color:var(--text-faint);cursor:pointer;padding:3px 7px;font-size:12px;border-radius:3px;transition:all .15s;opacity:0;}
+.log-table tr:hover .btn-delete-log{opacity:1;}
+.btn-delete-log:hover{color:var(--red);background:#e0525215;}
+.manual-entry{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:22px;}
+.manual-entry-title{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:9px;letter-spacing:2px;color:var(--text-faint);text-transform:uppercase;margin-bottom:10px;}
+.manual-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;}
+.manual-field{display:flex;flex-direction:column;gap:4px;}
+.manual-field label{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:9px;letter-spacing:1px;color:var(--text-faint);text-transform:uppercase;}
+.manual-field input,.manual-field select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 10px;font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;border-radius:4px;outline:none;transition:border-color .15s;}
+.manual-field input:focus,.manual-field select:focus{border-color:var(--accent);}
+.manual-field select option{background:var(--surface2);}
+.btn-confirm{background:var(--accent);color:#000;border:none;padding:8px 16px;font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:11px;font-weight:500;letter-spacing:1px;cursor:pointer;border-radius:4px;transition:opacity .15s;}
+.btn-confirm:hover{opacity:.85;}
+.btn-cancel{background:none;border:1px solid var(--border);color:var(--text-dim);padding:8px 16px;font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:11px;cursor:pointer;border-radius:4px;transition:all .15s;}
+.btn-cancel:hover{border-color:var(--red);color:var(--red);}
+.empty-state{text-align:center;padding:48px;color:var(--text-faint);font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:11px;letter-spacing:1px;line-height:2.2;}
+
+/* week/month */
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:22px;}
+.week-day{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 8px;min-height:80px;display:flex;flex-direction:column;gap:3px;}
+.week-day.today{border-color:#e8a03066;}
+.week-day-name{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:9px;letter-spacing:1.5px;color:var(--text-faint);text-transform:uppercase;margin-bottom:2px;}
+.week-day-date{font-family:'Bebas Neue',Impact,'Arial Narrow',sans-serif;font-size:20px;color:var(--text-dim);}
+.week-day.today .week-day-date{color:var(--accent);}
+.week-mini-bar{height:3px;border-radius:2px;}
+.week-day-total{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:9px;color:var(--text-faint);margin-top:auto;}
+.month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:22px;}
+.month-day-header{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:9px;letter-spacing:1px;color:var(--text-faint);text-transform:uppercase;text-align:center;padding:4px;}
+.month-day{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:5px;min-height:58px;position:relative;transition:border-color .1s;}
+.month-day:hover{border-color:var(--border-hi);}
+.month-day.today{border-color:#e8a03088;}
+.month-day.other-month{opacity:.3;}
+.month-day-num{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:10px;color:var(--text-faint);}
+.month-day.today .month-day-num{color:var(--accent);}
+.month-heat-bar{height:2px;border-radius:1px;margin-top:2px;}
+.month-day-total{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:9px;color:var(--text-faint);position:absolute;bottom:4px;right:5px;}
+
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+/* ── BREAK TOAST ── */
+#breakToast{
+  position:fixed;bottom:-160px;left:50%;transform:translateX(-50%);
+  background:var(--surface);border:1px solid #e8a03055;border-radius:10px;
+  padding:16px 18px;z-index:1000;width:460px;max-width:calc(100vw - 32px);
+  box-shadow:0 8px 40px #000000aa;transition:bottom .35s cubic-bezier(.34,1.56,.64,1);
+  display:flex;flex-direction:column;gap:10px;
+}
+#breakToast.visible{bottom:20px;}
+.toast-top{display:flex;justify-content:space-between;align-items:flex-start;}
+.toast-label{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:10px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:2px;}
+.toast-sub{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:11px;color:var(--text-dim);}
+.toast-row{display:flex;gap:8px;align-items:center;}
+#breakInput{flex:1;background:var(--surface2);border:1px solid var(--border-hi);color:var(--text);padding:9px 12px;font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;border-radius:5px;outline:none;transition:border-color .15s;}
+#breakInput:focus{border-color:var(--accent);}
+#breakInput::placeholder{color:var(--text-faint);}
+.toast-hint{font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:9px;color:var(--text-faint);letter-spacing:1px;text-align:right;}
+
+/* ── PRINT ── */
+.print-header{display:none;}
+@media print {
+  :root{--bg:#fff;--surface:#fff;--surface2:#f4f4f4;--border:#ccc;--text:#111;--text-dim:#444;--text-faint:#888;--accent:#c47800;}
+  body{background:#fff;color:#111;}
+  #nowBar,header,.period-nav,.sidebar,#breakToast{display:none!important;}
+  main{display:block!important;}
+  .content{padding:0;overflow:visible;}
+  .print-header{display:block!important;margin-bottom:20px;border-bottom:2px solid #c47800;padding-bottom:10px;}
+  .print-header h1{font-family:'Bebas Neue',Impact,'Arial Narrow',sans-serif;font-size:28px;letter-spacing:3px;color:#c47800;}
+  .print-header p{font-size:11px;color:#888;margin-top:2px;}
+  .summary-card{border:1px solid #ccc;break-inside:avoid;}
+  .log-table th,.log-table td{border-bottom:1px solid #ddd;}
+  .btn-delete-log,.manual-entry{display:none!important;}
+  .bar-fill,.tracker-dot,.log-dot{print-color-adjust:exact;-webkit-print-color-adjust:exact;}
+  @page{margin:16mm;}
+}
+</style>
+</head>
+<body>
+
+<!-- NOW BAR -->
+<div id="nowBar">
+  <div class="now-left">
+    <div class="now-dot"></div>
+    <div class="now-label" id="nowLabel">No timer running — pick a tracker below</div>
+    <div class="now-elapsed" id="nowElapsed" style="display:none"></div>
+  </div>
+  <div class="now-right">
+    <div class="key-hint"><kbd>§</kbd>&nbsp;START / STOP</div>
+    <div class="date-display" id="dateDisplay"></div>
+    <button class="now-stop-btn" onclick="stopTimer(true)">&#9632;&nbsp;STOP</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">TimeKeep <sub>LOCAL TRACKER</sub></div>
+  <div class="header-right">
+    <div class="view-tabs">
+      <button class="view-tab active" onclick="setView('day')">Day</button>
+      <button class="view-tab" onclick="setView('week')">Week</button>
+      <button class="view-tab" onclick="setView('month')">Month</button>
+    </div>
+  </div>
+</header>
+
+<!-- PERIOD NAV -->
+<div class="period-nav">
+  <div class="nav-group">
+    <button class="nav-btn" onclick="navigate(-1)">&#8592; Prev</button>
+    <button class="nav-btn today" onclick="goToday()">Today</button>
+    <button class="nav-btn" onclick="navigate(1)">Next &#8594;</button>
+  </div>
+  <div class="period-label" id="periodLabel"></div>
+  <div class="nav-group">
+    <button class="nav-btn" onclick="printStats()" title="Print current view">&#9113;&nbsp;Print</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main>
+  <div class="sidebar">
+    <div class="sidebar-section-label">Trackers</div>
+    <div id="trackerList"></div>
+    <div class="sidebar-settings">
+      <div class="sidebar-section-label" style="margin-top:6px">Options</div>
+      <div class="setting-row">
+        <input type="checkbox" class="tk-checkbox" id="chkBreakReason" onchange="savePrefs()">
+        <label for="chkBreakReason">Ask for break reason when stopping</label>
+      </div>
+      <button class="btn-add-tracker" onclick="toggleAddForm()">+ Add Tracker</button>
+      <div class="add-form" id="addForm">
+        <div style="font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:9px;letter-spacing:2px;color:var(--text-faint);text-transform:uppercase">New Tracker</div>
+        <input type="text" id="newTrackerName" placeholder="Name…" />
+        <select id="newTrackerParent"><option value="">— Top Level —</option></select>
+        <div class="color-swatches" id="colorSwatches"></div>
+        <div class="add-form-row">
+          <button class="btn-confirm" onclick="addTracker()">Add</button>
+          <button class="btn-cancel" onclick="toggleAddForm()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="content" id="content"></div>
+</main>
+
+<!-- BREAK TOAST -->
+<div id="breakToast">
+  <div class="toast-top">
+    <div>
+      <div class="toast-label">⏸ Timer stopped</div>
+      <div class="toast-sub" id="toastSub"></div>
+    </div>
+    <button class="btn-cancel" onclick="dismissBreakToast()" style="padding:4px 10px;font-size:10px">Skip</button>
+  </div>
+  <div class="toast-row">
+    <input type="text" id="breakInput" placeholder="Why are you taking a break? (optional)" maxlength="120" />
+    <button class="btn-confirm" onclick="saveBreakReason()" style="white-space:nowrap">Save</button>
+  </div>
+  <div class="toast-hint">ENTER to save &nbsp;·&nbsp; ESC to skip</div>
+</div>
+
+<script>
+'use strict';
+const COLORS=['#e8a030','#4a90c4','#4caf7d','#9b6fc4','#c4531a','#e05252','#4ac4b0','#c4b04a'];
+
+let state={trackers:[],logs:[],activeTimer:null,lastTrackerId:null,view:'day',cursor:null};
+let prefs={askBreakReason:false};
+let pendingBreakLogId=null;
+
+// ── PERSIST ──
+function loadState(){
+  try{const s=localStorage.getItem('timekeep_v2');if(s)Object.assign(state,JSON.parse(s));}catch(e){}
+  try{const p=localStorage.getItem('timekeep_prefs');if(p)Object.assign(prefs,JSON.parse(p));}catch(e){}
+  if(!state.trackers.length)seedData();
+}
+function saveState(){localStorage.setItem('timekeep_v2',JSON.stringify(state));}
+function savePrefs(){
+  prefs.askBreakReason=document.getElementById('chkBreakReason').checked;
+  localStorage.setItem('timekeep_prefs',JSON.stringify(prefs));
+}
+function applyPrefs(){document.getElementById('chkBreakReason').checked=prefs.askBreakReason;}
+
+function seedData(){
+  const bp=addTrackerData('BeatPulse',null,'#4a90c4');
+  const pr=addTrackerData('Practice',null,'#9b6fc4');
+  ['Guitar','Bass','Piano','Flute','Violin','Sax','Trumpet'].forEach((n,i)=>addTrackerData(n,pr,COLORS[i%COLORS.length]));
+  addTrackerData('Exercise',null,'#4caf7d');
+}
+function addTrackerData(name,parentId,color){
+  const id='tr_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  state.trackers.push({id,name,parentId:parentId||null,color:color||COLORS[0]});
+  saveState();return id;
+}
+
+// ── TIMER ──
+let timerInterval=null;
+function startTimer(trackerId){
+  if(state.activeTimer){stopTimer(true);setTimeout(()=>_doStart(trackerId),60);}
+  else _doStart(trackerId);
+}
+function _doStart(trackerId){
+  state.activeTimer={trackerId,startMs:Date.now()};
+  state.lastTrackerId=trackerId;
+  saveState();
+  clearInterval(timerInterval);
+  timerInterval=setInterval(tickTimer,500);
+  updateNowBar();render();
+}
+function stopTimer(doSave=true){
+  if(!state.activeTimer)return;
+  const{trackerId,startMs}=state.activeTimer;
+  let logId=null;
+  if(doSave){
+    const endMs=Date.now();
+    const duration=Math.floor((endMs-startMs)/1000);
+    if(duration>=5){
+      logId='log_'+Date.now();
+      state.logs.push({id:logId,trackerId,startMs,endMs,duration,note:'',breakReason:''});
+    }
+  }
+  state.activeTimer=null;
+  saveState();
+  clearInterval(timerInterval);timerInterval=null;
+  updateNowBar();render();
+  if(doSave&&logId&&prefs.askBreakReason){
+    pendingBreakLogId=logId;
+    const t=getTracker(trackerId);
+    showBreakToast(t?t.name:'tracker');
+  }
+}
+function toggleTimer(){
+  // Flash feedback
+  const bar=document.getElementById('nowBar');
+  bar.style.transition='none';bar.style.opacity='.5';
+  setTimeout(()=>{bar.style.transition='';bar.style.opacity='1';},100);
+  if(state.activeTimer)stopTimer(true);
+  else if(state.lastTrackerId)startTimer(state.lastTrackerId);
+}
+function tickTimer(){
+  updateNowBar();
+  if(!state.activeTimer)return;
+  const elapsed=Math.floor((Date.now()-state.activeTimer.startMs)/1000);
+  const el=document.getElementById('live_'+state.activeTimer.trackerId);
+  if(el)el.textContent=formatDuration(elapsed);
+}
+
+// ── NOW BAR ──
+function updateNowBar(){
+  const bar=document.getElementById('nowBar');
+  const label=document.getElementById('nowLabel');
+  const elapsed=document.getElementById('nowElapsed');
+  if(state.activeTimer){
+    bar.classList.add('active');
+    const t=getTracker(state.activeTimer.trackerId);
+    const secs=Math.floor((Date.now()-state.activeTimer.startMs)/1000);
+    label.innerHTML=`Tracking <span class="now-tracker-name">${t?t.name:'?'}</span>`;
+    elapsed.style.display='block';
+    elapsed.textContent=formatDuration(secs);
+  }else{
+    bar.classList.remove('active');
+    if(state.lastTrackerId){
+      const t=getTracker(state.lastTrackerId);
+      label.innerHTML=`Paused &mdash; <span style="color:var(--text-faint)">${t?t.name:''}</span><span style="color:var(--text-faint);font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:10px;margin-left:10px">§ to resume</span>`;
+    }else{
+      label.textContent='No timer running — start one below';
+    }
+    elapsed.style.display='none';
+  }
+}
+
+// ── BREAK TOAST ──
+function showBreakToast(name){
+  document.getElementById('toastSub').textContent=name+' session saved';
+  document.getElementById('breakInput').value='';
+  document.getElementById('breakToast').classList.add('visible');
+  setTimeout(()=>document.getElementById('breakInput').focus(),360);
+}
+function hideBreakToast(){
+  document.getElementById('breakToast').classList.remove('visible');
+  pendingBreakLogId=null;
+}
+function saveBreakReason(){
+  const reason=document.getElementById('breakInput').value.trim();
+  if(pendingBreakLogId&&reason){
+    const log=state.logs.find(l=>l.id===pendingBreakLogId);
+    if(log){log.breakReason=reason;saveState();render();}
+  }
+  hideBreakToast();
+}
+function dismissBreakToast(){hideBreakToast();}
+
+// ── HELPERS ──
+function getTracker(id){return state.trackers.find(t=>t.id===id);}
+function getChildren(pid){return state.trackers.filter(t=>t.parentId===pid);}
+function getTopLevel(){return state.trackers.filter(t=>!t.parentId);}
+function allTrackerIds(id){const ids=[id];getChildren(id).forEach(c=>ids.push(...allTrackerIds(c.id)));return ids;}
+function formatDuration(secs){
+  if(secs<60)return secs+'s';
+  const h=Math.floor(secs/3600),m=Math.floor((secs%3600)/60),s=secs%60;
+  if(h>0)return h+'h '+m+'m';
+  return m+'m '+s+'s';
+}
+function formatDurationShort(secs){
+  if(!secs)return '—';
+  const h=Math.floor(secs/3600),m=Math.floor((secs%3600)/60);
+  if(h>0)return h+'h '+String(m).padStart(2,'0')+'m';
+  return m+'m';
+}
+function dateStr(ms){const d=new Date(ms);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function todayStr(){return dateStr(Date.now());}
+function getCursor(){return state.cursor||todayStr();}
+function parseDate(s){const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
+function getWeekRange(ds){
+  const d=parseDate(ds),mon=new Date(d);
+  mon.setDate(d.getDate()-((d.getDay()+6)%7));
+  const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+  return{start:dateStr(mon),end:dateStr(sun)};
+}
+function getMonthRange(ds){
+  const[y,m]=ds.split('-').map(Number);
+  return{start:y+'-'+String(m).padStart(2,'0')+'-01',end:y+'-'+String(m).padStart(2,'0')+'-'+new Date(y,m,0).getDate()};
+}
+function logsInRange(s,e){return state.logs.filter(l=>{const d=dateStr(l.startMs);return d>=s&&d<=e;});}
+function logsForDay(ds){return logsInRange(ds,ds);}
+function trackerTotalSecs(id,logs){
+  let total=logs.filter(l=>l.trackerId===id).reduce((a,l)=>a+l.duration,0);
+  getChildren(id).forEach(c=>{total+=trackerTotalSecs(c.id,logs);});
+  return total;
+}
+function getLogsForCurrentPeriod(){
+  const c=getCursor();
+  if(state.view==='day')return logsForDay(c);
+  if(state.view==='week'){const r=getWeekRange(c);return logsInRange(r.start,r.end);}
+  const r=getMonthRange(c);return logsInRange(r.start,r.end);
+}
+
+// ── VIEW / NAV ──
+function setView(v){
+  state.view=v;
+  document.querySelectorAll('.view-tab').forEach((el,i)=>el.classList.toggle('active',['day','week','month'][i]===v));
+  renderContent();renderPeriodLabel();
+}
+function navigate(dir){
+  const d=parseDate(getCursor());
+  if(state.view==='day')d.setDate(d.getDate()+dir);
+  else if(state.view==='week')d.setDate(d.getDate()+dir*7);
+  else d.setMonth(d.getMonth()+dir);
+  state.cursor=dateStr(d);renderContent();renderPeriodLabel();
+}
+function goToday(){state.cursor=todayStr();renderContent();renderPeriodLabel();}
+function renderPeriodLabel(){
+  const c=getCursor(),el=document.getElementById('periodLabel');
+  if(state.view==='day')el.textContent=parseDate(c).toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}).toUpperCase();
+  else if(state.view==='week'){const r=getWeekRange(c);el.textContent=r.start+' — '+r.end;}
+  else{const[y,m]=c.split('-');el.textContent=['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'][Number(m)-1]+' '+y;}
+}
+
+// ── PRINT ──
+function printStats(){
+  const ph=document.getElementById('printHeader');
+  if(!ph)return;
+  ph.style.display='block';
+  ph.querySelector('h1').textContent='TimeKeep — '+document.getElementById('periodLabel').textContent;
+  ph.querySelector('p').textContent='Printed '+new Date().toLocaleString();
+  window.print();
+  ph.style.display='none';
+}
+
+// ── SIDEBAR ──
+const expandedTrackers=new Set();
+function renderSidebar(){
+  const el=document.getElementById('trackerList');
+  const tops=getTopLevel();
+  const pl=getLogsForCurrentPeriod();
+  if(!tops.length){el.innerHTML='<div class="empty-state">No trackers yet</div>';return;}
+  el.innerHTML=tops.map(t=>renderTrackerCard(t,pl)).join('');
+  expandedTrackers.forEach(id=>{
+    const s=document.getElementById('sub_'+id),c=document.getElementById('chev_'+id);
+    if(s)s.classList.add('open');if(c)c.classList.add('open');
+  });
+  const sel=document.getElementById('newTrackerParent');
+  if(sel)sel.innerHTML='<option value="">— Top Level —</option>'+tops.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+}
+function renderTrackerCard(t,pl){
+  const children=getChildren(t.id),hc=children.length>0;
+  const isRunning=state.activeTimer&&allTrackerIds(t.id).includes(state.activeTimer.trackerId);
+  const ps=trackerTotalSecs(t.id,pl);
+  const liveEl=isRunning&&!hc?`<span id="live_${t.id}" class="tracker-live-time">${formatDuration(Math.floor((Date.now()-state.activeTimer.startMs)/1000))}</span>`:'';
+  const subHTML=hc?`<div class="sub-items" id="sub_${t.id}">${children.map(c=>{
+    const cr=state.activeTimer?.trackerId===c.id;
+    const cs=trackerTotalSecs(c.id,pl);
+    const cl=cr?`<span id="live_${c.id}" class="tracker-live-time" style="font-size:10px">${formatDuration(Math.floor((Date.now()-state.activeTimer.startMs)/1000))}</span>`:'';
+    return `<div class="sub-item ${cr?'running':''}">
+      <div class="sub-item-dot" style="background:${c.color}"></div>
+      <div class="sub-item-name">${c.name}</div>${cl}
+      <div class="sub-item-time">${formatDurationShort(cs)}</div>
+      ${cr?`<button class="btn-play stop" onclick="event.stopPropagation();stopTimer(true)" aria-label="Stop ${c.name}">&#9632;</button>`
+          :`<button class="btn-play" onclick="event.stopPropagation();startTimer('${c.id}')" aria-label="Start ${c.name}">&#9654;</button>`}
+    </div>`;
+  }).join('')}</div>`:'';
+  const headerClick = hc ? `toggleExpand('${t.id}')` : '';
+  return `<div class="tracker-card ${isRunning?'running':''}">
+    <div class="tracker-header" onclick="${headerClick}" ${hc?'role="button"':''}>
+      <div class="tracker-dot ${isRunning?'pulse':''}" style="background:${t.color}"></div>
+      <div class="tracker-name">${t.name}</div>
+      <div class="tracker-controls">
+        <div class="tracker-period-time">${formatDurationShort(ps)}</div>${liveEl}
+        ${hc?`<span class="chevron ${expandedTrackers.has(t.id)?'open':''}" id="chev_${t.id}">&#9658;</span>`
+           :(isRunning?`<button class="btn-play stop" onclick="event.stopPropagation();stopTimer(true)" aria-label="Stop ${t.name}">&#9632;</button>`
+                      :`<button class="btn-play" onclick="event.stopPropagation();startTimer('${t.id}')" aria-label="Start ${t.name}">&#9654;</button>`)}
+      </div>
+    </div>${subHTML}
+  </div>`;
+}
+function toggleExpand(id){
+  if(expandedTrackers.has(id))expandedTrackers.delete(id);else expandedTrackers.add(id);
+  renderSidebar();
+}
+
+// ── CONTENT ──
+function renderContent(){
+  document.getElementById('content').innerHTML=
+    state.view==='day'?renderDayView():state.view==='week'?renderWeekView():renderMonthView();
+  renderSidebar();
+}
+
+function renderDayView(){
+  const c=getCursor(),logs=logsForDay(c),tops=getTopLevel();
+  const cards=tops.map(t=>{
+    const s=trackerTotalSecs(t.id,logs);
+    return `<div class="summary-card"><div class="summary-card-bar" style="background:${t.color}"></div>
+      <div class="summary-card-name">${t.name}</div>
+      <div class="summary-card-time" style="color:${t.color}">${s?formatDurationShort(s):'—'}</div>
+      <div class="summary-card-sub">${s?Math.round(s/60)+' min':'no data'}</div></div>`;
+  }).join('');
+
+  const flat=state.trackers.map(t=>({t,secs:logs.filter(l=>l.trackerId===t.id).reduce((a,l)=>a+l.duration,0)}))
+    .filter(x=>x.secs>0).sort((a,b)=>b.secs-a.secs);
+  const maxS=flat[0]?.secs||1;
+  const bars=flat.map(x=>`<div class="bar-row">
+    <div class="bar-label"><span class="log-dot" style="background:${x.t.color}"></span>${x.t.name}</div>
+    <div class="bar-track"><div class="bar-fill" style="width:${Math.round(x.secs/maxS*100)}%;background:${x.t.color}"></div></div>
+    <div class="bar-time">${formatDurationShort(x.secs)}</div></div>`).join('');
+
+  const sorted=[...logs].sort((a,b)=>b.startMs-a.startMs);
+  const hasBreak=sorted.some(l=>l.breakReason);
+  const rows=sorted.map(l=>{
+    const t=getTracker(l.trackerId);if(!t)return'';
+    const s=new Date(l.startMs).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    const e=new Date(l.endMs).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    return `<tr>
+      <td><span class="log-dot" style="background:${t.color}"></span>${t.name}</td>
+      <td class="log-time-mono">${s}</td><td class="log-time-mono">${e}</td>
+      <td class="log-time-mono">${formatDurationShort(l.duration)}</td>
+      <td style="color:var(--text-faint);font-size:11px">${l.note||''}</td>
+      ${hasBreak?`<td class="log-break-reason">${l.breakReason?'⏸ '+l.breakReason:''}</td>`:''}
+      <td><button class="btn-delete-log" onclick="deleteLog('${l.id}')" aria-label="Delete entry">✕</button></td>
+    </tr>`;
+  }).join('');
+
+  return `<div id="printHeader" class="print-header"><h1></h1><p></p></div>
+    <div class="summary-grid">${cards}</div>
+    ${flat.length?`<div class="chart-section"><div class="section-title">Breakdown</div><div class="bar-chart">${bars}</div></div>`:''}
+    <div class="manual-entry">
+      <div class="manual-entry-title">+ Manual Log Entry</div>
+      <div class="manual-row">
+        <div class="manual-field"><label>Tracker</label>
+          <select id="qTracker">${state.trackers.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')}</select></div>
+        <div class="manual-field"><label>Date</label><input type="date" id="qDate" value="${c}" /></div>
+        <div class="manual-field"><label>Start</label><input type="time" id="qStart" /></div>
+        <div class="manual-field"><label>End</label><input type="time" id="qEnd" /></div>
+        <div class="manual-field"><label>Note</label><input type="text" id="qNote" placeholder="optional…" style="width:120px"/></div>
+        <div class="manual-field"><label>&nbsp;</label><button class="btn-confirm" onclick="saveQuickEntry()">Log</button></div>
+      </div>
+    </div>
+    ${rows?`<div class="log-section"><div class="section-title">Session Log</div>
+      <table class="log-table"><thead><tr>
+        <th>Tracker</th><th>Start</th><th>End</th><th>Duration</th><th>Note</th>
+        ${hasBreak?'<th>Break Reason</th>':''}<th></th>
+      </tr></thead><tbody>${rows}</tbody></table></div>`
+    :`<div class="empty-state">No sessions logged yet today.<br>Start a timer or add a manual entry above.</div>`}`;
+}
+
+function renderWeekView(){
+  const c=getCursor(),{start,end}=getWeekRange(c),logs=logsInRange(start,end),tops=getTopLevel();
+  const days=[],sd=parseDate(start);
+  for(let i=0;i<7;i++){const d=new Date(sd);d.setDate(sd.getDate()+i);days.push(dateStr(d));}
+  const DAY=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],ts=todayStr();
+  const dayCards=days.map((d,i)=>{
+    const dl=logsForDay(d),tot=dl.reduce((a,l)=>a+l.duration,0);
+    const bars=tops.map(t=>trackerTotalSecs(t.id,dl)?`<div class="week-mini-bar" style="background:${t.color};width:${Math.min(100,Math.round(trackerTotalSecs(t.id,dl)/3600*60))}%"></div>`:'').join('');
+    return `<div class="week-day ${d===ts?'today':''}">
+      <div class="week-day-name">${DAY[i]}</div>
+      <div class="week-day-date">${parseDate(d).getDate()}</div>${bars}
+      <div class="week-day-total">${tot?formatDurationShort(tot):''}</div></div>`;
+  }).join('');
+  const maxS=Math.max(1,...tops.map(t=>trackerTotalSecs(t.id,logs)));
+  const tBars=tops.map(t=>{const s=trackerTotalSecs(t.id,logs);return`<div class="bar-row">
+    <div class="bar-label"><span class="log-dot" style="background:${t.color}"></span>${t.name}</div>
+    <div class="bar-track"><div class="bar-fill" style="width:${Math.round(s/maxS*100)}%;background:${t.color}"></div></div>
+    <div class="bar-time">${formatDurationShort(s)}</div></div>`;}).join('');
+  const tRows=tops.map(t=>{
+    const cells=days.map(d=>`<td style="font-family:'IBM Plex Mono','Courier New',Courier,monospace;font-size:11px;color:var(--text-dim);padding:7px 10px;border-bottom:1px solid var(--border)">${trackerTotalSecs(t.id,logsForDay(d))?formatDurationShort(trackerTotalSecs(t.id,logsForDay(d))):'—'}</td>`).join('');
+    return`<tr><td style="padding:7px 10px;border-bottom:1px solid var(--border)"><span class="log-dot" style="background:${t.color}"></span>${t.name}</td>${cells}</tr>`;}).join('');
+  return`<div id="printHeader" class="print-header"><h1></h1><p></p></div>
+    <div class="chart-section"><div class="section-title">Week at a Glance</div><div class="week-grid">${dayCards}</div></div>
+    <div class="chart-section"><div class="section-title">Weekly Totals</div><div class="bar-chart">${tBars}</div></div>
+    <div class="log-section"><div class="section-title">By Tracker / Day</div>
+      <table class="log-table"><thead><tr><th>Tracker</th>${DAY.map((n,i)=>`<th>${n} ${parseDate(days[i]).getDate()}</th>`).join('')}</tr></thead>
+      <tbody>${tRows}</tbody></table></div>`;
+}
+
+function renderMonthView(){
+  const c=getCursor(),{start,end}=getMonthRange(c),logs=logsInRange(start,end),tops=getTopLevel(),ts=todayStr();
+  const[y,m]=c.split('-').map(Number),fl=new Date(y,m-1,1),ll=new Date(y,m,0),sdow=(fl.getDay()+6)%7;
+  const H=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<div class="month-day-header">${d}</div>`).join('');
+  let cells='';
+  for(let i=0;i<sdow;i++)cells+='<div class="month-day other-month"></div>';
+  for(let d=1;d<=ll.getDate();d++){
+    const ds=y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const dl=logsForDay(ds),tot=dl.reduce((a,l)=>a+l.duration,0);
+    const bars=tops.map(t=>trackerTotalSecs(t.id,dl)?`<div class="month-heat-bar" style="background:${t.color}"></div>`:'').join('');
+    cells+=`<div class="month-day ${ds===ts?'today':''}">
+      <div class="month-day-num">${d}</div>${bars}
+      ${tot?`<div class="month-day-total">${formatDurationShort(tot)}</div>`:''}</div>`;
+  }
+  const maxS=Math.max(1,...tops.map(t=>trackerTotalSecs(t.id,logs)));
+  const mBars=tops.map(t=>{const s=trackerTotalSecs(t.id,logs);return`<div class="bar-row">
+    <div class="bar-label"><span class="log-dot" style="background:${t.color}"></span>${t.name}</div>
+    <div class="bar-track"><div class="bar-fill" style="width:${Math.round(s/maxS*100)}%;background:${t.color}"></div></div>
+    <div class="bar-time">${formatDurationShort(s)}</div></div>`;}).join('');
+  return`<div id="printHeader" class="print-header"><h1></h1><p></p></div>
+    <div class="chart-section"><div class="section-title">Calendar</div><div class="month-grid">${H}${cells}</div></div>
+    <div class="chart-section"><div class="section-title">Monthly Totals</div><div class="bar-chart">${mBars}</div></div>`;
+}
+
+// ── MANUAL ENTRY ──
+function saveQuickEntry(){
+  const tid=document.getElementById('qTracker').value,dv=document.getElementById('qDate').value,
+    sv=document.getElementById('qStart').value,ev=document.getElementById('qEnd').value,
+    note=document.getElementById('qNote')?.value||'';
+  if(!tid||!dv||!sv||!ev){alert('Please fill in tracker, date, start and end time.');return;}
+  const sMs=new Date(dv+'T'+sv).getTime(),eMs=new Date(dv+'T'+ev).getTime();
+  if(eMs<=sMs){alert('End time must be after start time.');return;}
+  state.logs.push({id:'log_'+Date.now(),trackerId:tid,startMs:sMs,endMs:eMs,duration:Math.floor((eMs-sMs)/1000),note,breakReason:''});
+  saveState();render();
+}
+function deleteLog(id){state.logs=state.logs.filter(l=>l.id!==id);saveState();render();}
+
+// ── ADD TRACKER ──
+let selectedColor=COLORS[0];
+function initColorSwatches(){
+  document.getElementById('colorSwatches').innerHTML=COLORS.map((c,i)=>
+    `<div class="swatch ${i===0?'selected':''}" style="background:${c}" onclick="selectColor('${c}',this)" title="${c}"></div>`).join('');
+}
+function selectColor(c,el){
+  selectedColor=c;
+  document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function toggleAddForm(){
+  const el=document.getElementById('addForm');
+  el.classList.toggle('open');
+  if(el.classList.contains('open'))document.getElementById('newTrackerName').focus();
+}
+function addTracker(){
+  const name=document.getElementById('newTrackerName').value.trim();
+  if(!name)return;
+  addTrackerData(name,document.getElementById('newTrackerParent').value||null,selectedColor);
+  document.getElementById('newTrackerName').value='';
+  document.getElementById('addForm').classList.remove('open');
+  render();
+}
+
+// ── CLOCK ──
+function updateClock(){
+  const now=new Date();
+  document.getElementById('dateDisplay').innerHTML=
+    now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}).toUpperCase()+
+    '<br>'+now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+// ── KEYBOARD ──
+document.addEventListener('keydown',e=>{
+  if(e.key==='§'){
+    const tag=document.activeElement?.tagName?.toLowerCase();
+    if(tag==='input'||tag==='textarea'||tag==='select')return;
+    e.preventDefault();toggleTimer();return;
+  }
+  if(document.getElementById('breakToast').classList.contains('visible')){
+    if(e.key==='Enter'){e.preventDefault();saveBreakReason();}
+    if(e.key==='Escape'){e.preventDefault();dismissBreakToast();}
+  }
+});
+
+// ── MAIN ──
+function render(){renderSidebar();renderContent();renderPeriodLabel();updateNowBar();}
+
+function init(){
+  loadState();applyPrefs();initColorSwatches();render();updateClock();
+  setInterval(updateClock,1000);
+  if(state.activeTimer){timerInterval=setInterval(tickTimer,500);}
+  document.getElementById('newTrackerName').addEventListener('keydown',e=>{
+    if(e.key==='Enter')addTracker();
+    if(e.key==='Escape')toggleAddForm();
+  });
+}
+init();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      console.log('TimeKeep: offline ready', reg.scope);
+    }).catch(err => console.warn('SW registration failed:', err));
+  });
+}
+</script>
+</body>
+</html>
